@@ -8,14 +8,13 @@
 
 
 class VigenereCipher: public Cipher{
+    std::string key;
+
 public:
     VigenereCipher(const std::string& k);
 
     std::string encrypt(const std::string& text) override;
     std::string decrypt(const std::string& text) override;
-
-private:
-    std::string key;
 
 };
 
