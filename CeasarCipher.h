@@ -8,7 +8,7 @@
 
 
 class CeasarCipher: public Cipher{
-    int shift;
+    int key;
 
 public:
     CeasarCipher(int k);

@@ -5,37 +5,51 @@
 #include <iostream>
 
 int main() {
-    std::cout << "Caesar Cipher" << std::endl;
-    cipher_t caesar = cipher_create_ceasar(3);
+    int option;
+    std::string text;
+    std::cout << "Select cipher type: Caesar Cipher - 1\n Vigenere Cipher - 2\n >> ";
+    std::cin >> option;
+    std::cin.get();
 
-    const char* text = "ANNA";
-    std::cout << "Original: " << text << std::endl;
+    if (option != 1 && option != 2) {
+        std::cout << "Invalid option" << std::endl;
+        return 1;
+    }
 
-    char* encrypted_ceasar = cipher_encrypt(&caesar, text);
-    std::cout << "Encrypted: " << encrypted_ceasar << std::endl;
+    std::cout << "Enter text to encrypt: ";
+    std::getline(std::cin, text);
 
-    char* decrypted_ceasar = cipher_decrypt(&caesar, encrypted_ceasar);
-    std::cout << "Decrypted: " << decrypted_ceasar << std::endl;
+    cipher_t cipher = nullptr;
 
-    cipher_free(encrypted_ceasar);
-    cipher_free(decrypted_ceasar);
-    cipher_destroy(&caesar);
+    if (option == 1) {
+        int key;
+        std::cout << "Enter Caesar key (int): ";
+        std::cin >> key;
 
-    std::cout << "Vigenere Cipher" << std::endl;
+        cipher = cipher_create_ceasar(key);
+    }
+    else {
+        std::string key;
+        std::cout << "Enter Vigenere key (string): ";
+        std::getline(std::cin, key);
 
-    cipher_t vigenere = cipher_create_vigenere("KEY");
+        cipher = cipher_create_vigenere(key.c_str());
+    }
 
-    std::cout << "Original: " << text << std::endl;
+    if (!cipher) {
+        std::cout << "Failed creation" << std::endl;
+        return 1;
+    }
 
-    char* encrypted_vigenere = cipher_encrypt(&vigenere, text);
-    std::cout << "Encrypted: " << encrypted_vigenere << std::endl;
+    char* encrypted = cipher_encrypt(&cipher, text.c_str());
+    std::cout << "Encrypted: " << encrypted << std::endl;
 
-    char* decrypted_vigenere = cipher_decrypt(&vigenere, encrypted_vigenere);
-    std::cout << "Decrypted: " << decrypted_vigenere << std::endl;
+    char* decrypted = cipher_decrypt(&cipher, encrypted);
+    std::cout << "Decrypted: " << decrypted << std::endl;
 
-    cipher_free(encrypted_vigenere);
-    cipher_free(decrypted_vigenere);
-    cipher_destroy(&vigenere);
+    cipher_free(encrypted);
+    cipher_free(decrypted);
+    cipher_destroy(&cipher);
 
     return 0;
 }
