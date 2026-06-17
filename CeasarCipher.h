@@ -13,8 +13,8 @@ class CeasarCipher: public Cipher{
 public:
     CeasarCipher(int k);
 
-    std::string encrypt(const std::string &text) override;
-    std::string decrypt(const std::string &text) override;
+    std::string encrypt(const std::string& text) override;
+    std::string decrypt(const std::string& text) override;
 };
 
 
