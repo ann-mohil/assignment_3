@@ -4,7 +4,9 @@
 
 #ifndef ASSIGNMENT_3_CONTACTLINE_H
 #define ASSIGNMENT_3_CONTACTLINE_H
-class ContactLine: public Line {
+#include "Line.h"
+
+class ContactLine: public Line{
     std::string name;
     std::string surname;
     std::string email;
