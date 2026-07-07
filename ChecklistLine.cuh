@@ -13,9 +13,8 @@ class ChecklistLine: public Line {
     bool checked;
 public:
     ChecklistLine(const std::string& i, bool c) : item(i), checked(c) {}
-    void print() const override {
-        std::cout << "[ " << (checked ? "x" : " ") << " ] " << item << std::endl;
-    }
-    std::string serialize() const override {return "Checked: " + std::to_string(checked) + "|" + item; }
+    void print() const override;
+    std::string serialize() const override;
+    static ChecklistLine* deserialize(const std::string& raw);
 };
 #endif //ASSIGNMENT_3_CHECKLISTLINE_CUH
