@@ -15,5 +15,7 @@ public:
     void add_line(Line* line);
     void print() const;
     std::string serialize() const;
+    void clear();
+    void deserialize(const std::string& text);
 };
 #endif //ASSIGNMENT_3_TEXT_H

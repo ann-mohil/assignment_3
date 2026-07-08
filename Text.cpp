@@ -3,14 +3,12 @@
 //
 #include "Text.h"
 #include <string>
+#include <sstream>
 
 Text::Text() {}
 
 Text::~Text() {
-    for (Line* line : lines) {
-        delete line;
-    }
-    lines.clear();
+    clear();
 }
 
 void Text::add_line(Line *line) {
@@ -29,4 +27,25 @@ std::string Text::serialize() const {
         info += line->serialize() + "\n";
     }
     return info;
+}
+
+void Text::clear() {
+    for (Line* line : lines) {
+        delete line;
+    }
+    lines.clear();
+}
+
+void Text::deserialize(const std::string &text) {
+    clear();
+    std::istringstream stream(text);
+    std::string raw_line;
+
+    while (std::getline(stream, raw_line)) {
+        if (raw_line.empty()) {
+            continue;
+        }
+        Line* line  = Line::deserialize(raw_line);
+        lines.push_back(line);
+    }
 }
