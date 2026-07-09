@@ -4,6 +4,9 @@
 #include "Text.h"
 #include <string>
 #include <sstream>
+#include <iostream>
+
+#include "ChecklistLine.cuh"
 
 Text::Text() {}
 
@@ -34,6 +37,19 @@ void Text::clear() {
         delete line;
     }
     lines.clear();
+}
+
+void Text::toggle_checked(int idx){
+    if (idx < 0 || idx >= (int)lines.size()) {
+        std::cout << "Invalid index\n";
+    }
+    ChecklistLine* checklist = dynamic_cast<ChecklistLine*>(lines[idx]);
+    if (!checklist) {
+        std::cout << "Checklist item is not found\n";
+        return;
+    }
+    checklist -> set_checked(!checklist -> is_checked());
+    std::cout << "Status toggled\n";
 }
 
 void Text::deserialize(const std::string &text) {

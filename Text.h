@@ -17,5 +17,6 @@ public:
     std::string serialize() const;
     void clear();
     void deserialize(const std::string& text);
+    void toggle_checked(int idx);
 };
 #endif //ASSIGNMENT_3_TEXT_H

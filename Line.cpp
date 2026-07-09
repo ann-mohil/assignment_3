@@ -6,7 +6,6 @@
 #include "ChecklistLine.cuh"
 #include "TextLine.h"
 #include "ContactLine.h"
-#include "ChecklistLine.h"
 
 Line *Line::deserialize(const std::string& raw) {
     if (Line* line = ContactLine::deserialize(raw)) {

@@ -1,104 +1,246 @@
 //
 // Created by Admin on 16.06.2026.
 //
-#include "cipher_api.h"
+#include "Text.h"
+#include "TextLine.h"
+#include "ContactLine.h"
+#include "ChecklistLine.cuh"
+#include "CipherLoader.h"
 #include <iostream>
-#include <dlfcn.h>
+#include <sstream>
+#include <fstream>
 
+class TextEditor {
+    Text text;
+public:
+    void run() {
+        int command;
+        while (true) {
+            print_menu();
+            if (!(std::cin >> command)) break;
+            std::cin.ignore(10000, '\n');
 
-typedef void* cipher_t;
+            if (command == 0) {
+                std::cout << "Exit\n";
+                break;
+            }
 
-typedef cipher_t (*create_ceasar_func)(int);
-typedef cipher_t (*create_vigenere_func)(const char*);
-typedef char* (*encrypt_func)(cipher_t*, const char*);
-typedef char* (*decrypt_func)(cipher_t*, const char*);
-typedef void (*destroy_func)(cipher_t*);
-typedef void (*free_func)(char*);
+            switch (command) {
+                case 1:
+                    add_textline();
+                    break;
+                case 2:
+                    add_contactline();
+                    break;
+                case 3:
+                    add_checklistline();
+                    break;
+                case 4:
+                    text.print();
+                    break;
+                case 5:
+                    save_to_file();
+                    break;
+                case 6:
+                    load_from_file();
+                    break;
+                case 7:
+                    encrypt();
+                    break;
+                case 8:
+                    decrypt();
+                    break;
+                case 9:
+                    toggle_checklist_status();
+                    break;
+                default:
+                    std::cout << "Unknown command\n";
+                    break;
+            }
+        }
+    }
+private:
+    void print_menu() const {
+        std::cout << "Menu\n";
+        std::cout << "1 - add text line\n";
+        std::cout << "2 - add contact line\n";
+        std::cout << "3 - add checklist line\n";
+        std::cout << "4 - print all\n";
+        std::cout << "5 - save to file\n";
+        std::cout << "6 - load from file\n";
+        std::cout << "7 - encrypt\n";
+        std::cout << "8 - decrypt\n";
+        std::cout << "9 - toggle status\n";
+        std::cout << "0 - exit..\n";
+    }
 
+    void add_textline() {
+        std::cout << "Enter text: ";
+        std::string content;
+        std::getline(std::cin, content);
+        text.add_line(new TextLine(content));
+        std::cout << "Text line added\n";
+    }
+
+    void add_contactline() {
+        std::string name, surname, email;
+        std::cout << "Enter name: ";
+        std::getline(std::cin, name);
+        std::cout << "Enter surname: ";
+        std::getline(std::cin, surname);
+        std::cout << "Enter e-mail: ";
+        std::getline(std::cin, email);
+        text.add_line(new ContactLine(name, surname, email));
+        std::cout << "Contact line added\n";
+    }
+
+    void add_checklistline() {
+        std::string item;
+        std::cout << "Enter checklist item: ";
+        std::getline(std::cin, item);
+        std::cout << "Checked? (1 - yes / 0 - no): ";
+        int checked;
+        std::cin >> checked;
+        std::cin.ignore(10000, '\n');
+        text.add_line(new ChecklistLine(item, checked != 0));
+        std::cout << "Checklist line added\n";
+    }
+
+    void save_to_file() {
+        std::cout << "Enter file path: ";
+        std::string path;
+        std::getline(std::cin, path);
+        std::ofstream file(path);
+        if (!file) {
+            std::cout << "Cannot open file\n";
+            return;
+        }
+        file << text.serialize();
+        std::cout << "Saved\n";
+    }
+
+    void load_from_file() {
+        std::cout << "Enter file path: ";
+        std::string path;
+        std::getline(std::cin, path);
+        std::ifstream file(path);
+        if (!file) {
+            std::cout << "Cannot open file\n";
+            return;
+        }
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        text.deserialize(buffer.str());
+        std::cout << "Loaded\n";
+    }
+
+    void encrypt() {
+        std::cout << "Enter input file path: ";
+        std::string input_path;
+        std::getline(std::cin, input_path);
+        std::cout << "Enter output file path: ";
+        std::string output_path;
+        std::getline(std::cin, output_path);
+
+        std::ifstream input(input_path);
+        if (!input) {
+            std::cout << "Cannot open file\n";
+            return;
+        }
+        std::stringstream buffer;
+        buffer << input.rdbuf();
+        std::string content = buffer.str();
+
+        std::cout << "Choose Cipher: 1 - Caesar, 2 - Vigenere\n";
+        int choice;
+        std::cin >> choice;
+        std::cin.ignore(10000, '\n');
+
+        try {
+            std::string encrypted;
+            if (choice == 1) {
+                int key;
+                std::cout << "Enter Caesar key: ";
+                std::cin >> key;
+                std::cin.ignore(10000, '\n');
+                CipherLoader loader(CipherType::Ceasar, key, "");
+                encrypted = loader.encrypt(content);
+            }
+            else {
+                std::string key;
+                std::cout << "Enter Vigenere key: ";
+                std::getline(std::cin, key);
+                CipherLoader loader(CipherType::Vigenere, 0, key);
+                encrypted = loader.encrypt(content);
+            }
+
+            std::ofstream output(output_path);
+            output << encrypted;
+            std::cout << "File encrypted and saved\n";
+        } catch (const std::exception& e) {
+            std::cout << "Failed: " << e.what() << "\n";
+        }
+    }
+
+    void decrypt() {
+        std::cout << "Enter input file path: ";
+        std::string input_path;
+        std::getline(std::cin, input_path);
+        std::cout << "Enter output file path: ";
+        std::string output_path;
+        std::getline(std::cin, output_path);
+
+        std::ifstream input(input_path);
+        if (!input) {
+            std::cout << "Cannot open file\n";
+            return;
+        }
+        std::stringstream buffer;
+        buffer << input.rdbuf();
+        std::string content = buffer.str();
+
+        std::cout << "Choose Cipher: 1 - Caesar, 2 - Vigenere\n";
+        int choice;
+        std::cin >> choice;
+        std::cin.ignore(10000, '\n');
+
+        try {
+            std::string decrypted;
+            if (choice == 1) {
+                int key;
+                std::cout << "Enter Caesar key: ";
+                std::cin >> key;
+                std::cin.ignore(10000, '\n');
+                CipherLoader loader(CipherType::Ceasar, key, "");
+                decrypted = loader.decrypt(content);
+            }
+            else {
+                std::string key;
+                std::cout << "Enter Vigenere key: ";
+                std::getline(std::cin, key);
+                CipherLoader loader(CipherType::Vigenere, 0, key);
+                decrypted = loader.decrypt(content);
+            }
+
+            std::ofstream output(output_path);
+            output << decrypted;
+            std::cout << "File decrypted and saved\n";
+        } catch (const std::exception& e) {
+            std::cout << "Failed: " << e.what() << "\n";
+        }
+    }
+
+    void toggle_checklist_status() {
+        std::cout << "Enter line index: ";
+        int idx;
+        std::cin >> idx;
+        std::cin.ignore(10000, '\n');
+        text.toggle_checked(idx);
+    }
+};
 
 int main() {
-
-    const char* lib_path = "./libcipher.dylib";
-
-    void* handle = dlopen("./libcipher.so", RTLD_LAZY);
-    if (!handle) {
-        std::cout << "Library loading error: " << dlerror() << std::endl;
-        return 1;
-    }
-    std::cout << "Library loaded at runtime" << std::endl;
-
-    auto cipher_create_ceasar = (create_ceasar_func)dlsym(handle, "cipher_create_ceasar");
-    auto cipher_create_vigenere = (create_vigenere_func)dlsym(handle, "cipher_create_vigenere");
-    auto cipher_encrypt = (encrypt_func)dlsym(handle, "cipher_encrypt");
-    auto cipher_decrypt = (decrypt_func)dlsym(handle, "cipher_decrypt");
-    auto cipher_destroy = (destroy_func)dlsym(handle, "cipher_destroy");
-    auto cipher_free = (free_func)dlsym(handle, "cipher_free");
-
-    if (!cipher_create_ceasar || !cipher_create_vigenere || !cipher_encrypt || !cipher_decrypt || !cipher_destroy || !cipher_free) {
-        std::cout << "Failed to resolve function pointers" << std::endl;
-        dlclose(handle);
-        return 1;
-    }
-
-    std::cout << "Function pointers resolved" << std::endl;
-    std::cout << "cipher_create_caesar: " << (void*)cipher_create_ceasar << std::endl;
-    std::cout << "cipher_create_vigenere: " << (void*)cipher_create_vigenere << std::endl;
-    std::cout << "cipher_encrypt: " << (void*)cipher_encrypt << std::endl;
-    std::cout << "cipher_decrypt: " << (void*)cipher_decrypt << std::endl;
-
-    int option;
-    std::string text;
-    std::cout << "Select cipher type: Caesar Cipher - 1\n Vigenere Cipher - 2\n >> ";
-    std::cin >> option;
-    std::cin.get();
-
-    if (option != 1 && option != 2) {
-        std::cout << "Invalid option" << std::endl;
-        return 1;
-    }
-
-    std::cout << "Enter text to encrypt: ";
-    std::getline(std::cin, text);
-
-    cipher_t cipher = nullptr;
-
-    if (option == 1) {
-        int key;
-        std::cout << "Enter Caesar key (int): ";
-        std::cin >> key;
-
-        cipher = cipher_create_ceasar(key);
-    }
-    else {
-        std::string key;
-        std::cout << "Enter Vigenere key (string): ";
-        std::getline(std::cin, key);
-
-        cipher = cipher_create_vigenere(key.c_str());
-    }
-
-    if (!cipher) {
-        std::cout << "Failed creation" << std::endl;
-        dlclose(handle);
-        return 1;
-    }
-
-    char* encrypted = cipher_encrypt(&cipher, text.c_str());
-    std::cout << "Encrypted: " << encrypted << std::endl;
-
-
-    char* decrypted = cipher_decrypt(&cipher, encrypted);
-    std::cout << "Decrypted: " << decrypted << std::endl;
-
-
-    cipher_free(encrypted);
-    cipher_free(decrypted);
-    cipher_destroy(&cipher);
-
-
-    std::cout << "Closing library.." << std::endl;
-    dlclose(handle);
-    std::cout << "Closed" << std::endl;
-
+    TextEditor text_editor;
+    text_editor.run();
     return 0;
 }

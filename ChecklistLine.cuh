@@ -16,5 +16,11 @@ public:
     void print() const override;
     std::string serialize() const override;
     static ChecklistLine* deserialize(const std::string& raw);
+    void set_checked(bool c) {
+        checked = c;
+    }
+    bool is_checked() const {
+        return checked;
+    }
 };
 #endif //ASSIGNMENT_3_CHECKLISTLINE_CUH

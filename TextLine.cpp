@@ -3,6 +3,7 @@
 //
 #include "TextLine.h"
 #include <string>
+#include <iostream>
 
 void TextLine::print() const {
     {std::cout << "Text: " << text << std::endl;}

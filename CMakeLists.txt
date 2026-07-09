@@ -14,5 +14,14 @@ add_library(cipher SHARED
         cipher_api.h
         cipher_api.cpp)
 
-add_executable(assignment_3 main.cpp)
+add_executable(assignment_3 main.cpp
+        Line.h
+        ContactLine.h
+        ChecklistLine.cuh
+        TextLine.cpp
+        ChecklistLine.cpp
+        Text.cpp
+        Line.cpp
+        CipherLoader.cpp
+        ContactLine.cpp)
 
