@@ -11,8 +11,12 @@
 #include <fstream>
 
 class TextEditor {
-    Text text;
+    std::vector<std::unique_ptr<Text>> tabs;
+    size_t current_tab = 0;
 public:
+    TextEditor() {
+        tabs.push_back(std::make_unique<Text>());
+    }
     void run() {
         int command;
         while (true) {
@@ -36,7 +40,7 @@ public:
                     add_checklistline();
                     break;
                 case 4:
-                    text.print();
+                    text().print();
                     break;
                 case 5:
                     save_to_file();
@@ -53,6 +57,15 @@ public:
                 case 9:
                     toggle_checklist_status();
                     break;
+                case 10:
+                    new_tab();
+                    break;
+                case 11:
+                    switch_tab();
+                    break;
+                case 12:
+                    list_tabs();
+                    break;
                 default:
                     std::cout << "Unknown command\n";
                     break;
@@ -60,6 +73,9 @@ public:
         }
     }
 private:
+    Text& text() {
+        return *tabs[current_tab];
+    }
     void print_menu() const {
         std::cout << "Menu\n";
         std::cout << "1 - add text line\n";
@@ -71,6 +87,9 @@ private:
         std::cout << "7 - encrypt\n";
         std::cout << "8 - decrypt\n";
         std::cout << "9 - toggle status\n";
+        std::cout << "10 - new tab\n";
+        std::cout << "11 - switch tab\n";
+        std::cout << "12 - list tabs\n";
         std::cout << "0 - exit..\n";
     }
 
@@ -78,7 +97,7 @@ private:
         std::cout << "Enter text: ";
         std::string content;
         std::getline(std::cin, content);
-        text.add_line(new TextLine(content));
+        text().add_line(new TextLine(content));
         std::cout << "Text line added\n";
     }
 
@@ -90,7 +109,7 @@ private:
         std::getline(std::cin, surname);
         std::cout << "Enter e-mail: ";
         std::getline(std::cin, email);
-        text.add_line(new ContactLine(name, surname, email));
+        text().add_line(new ContactLine(name, surname, email));
         std::cout << "Contact line added\n";
     }
 
@@ -102,7 +121,7 @@ private:
         int checked;
         std::cin >> checked;
         std::cin.ignore(10000, '\n');
-        text.add_line(new ChecklistLine(item, checked != 0));
+        text().add_line(new ChecklistLine(item, checked != 0));
         std::cout << "Checklist line added\n";
     }
 
@@ -115,7 +134,7 @@ private:
             std::cout << "Cannot open file\n";
             return;
         }
-        file << text.serialize();
+        file << text().serialize();
         std::cout << "Saved\n";
     }
 
@@ -130,7 +149,7 @@ private:
         }
         std::stringstream buffer;
         buffer << file.rdbuf();
-        text.deserialize(buffer.str());
+        text().deserialize(buffer.str());
         std::cout << "Loaded\n";
     }
 
@@ -235,7 +254,33 @@ private:
         int idx;
         std::cin >> idx;
         std::cin.ignore(10000, '\n');
-        text.toggle_checked(idx);
+        text().toggle_checked(idx);
+    }
+
+    void new_tab() {
+        tabs.push_back(std::make_unique<Text>());
+        current_tab = tabs.size() - 1;
+        std::cout << "New tab created\n";
+    }
+
+    void switch_tab() {
+        std::cout << "Enter tab numbee: ";
+        size_t idx;
+        std::cin >> idx;
+        std::cin.ignore(10000, '\n');
+
+        if (idx < 1 || idx > tabs.size()) {
+            std::cout << "Invalid tab number\n";
+            return;
+        }
+        current_tab = idx - 1;
+        std::cout << "Switched to tab" << idx << "\n";
+    }
+
+    void list_tabs() {
+        for (size_t i = 0; i < tabs.size(); i++) {
+            std::cout << "Tab " << i + 1 << (i == current_tab ? " (active)" : "") << "\n";
+        }
     }
 };
 
